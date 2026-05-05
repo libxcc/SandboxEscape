@@ -169,7 +169,7 @@ static id hook_unZipFile(id self, SEL _cmd, id zipPath, id toPath, id currentDir
                 [fm createDirectoryAtPath:fullPath withIntermediateDirectories:YES attributes:nil error:nil];
             } else {
                 [fm createDirectoryAtPath:[fullPath stringByDeletingLastPathComponent]
-                  withIntermediateDirectories:YES attributes:nil error:nil];
+              withIntermediateDirectories:YES attributes:nil error:nil];
 
                 if (p_unzOpenCurrentFilePassword(uf, NULL) == 0) {
                     NSMutableData *fileData = [NSMutableData data];
@@ -285,12 +285,12 @@ static NSString *findIconPath(NSString *bundlePath, NSDictionary *infoPlist) {
         for (NSString *iconName in iconFiles) {
             // Try exact name and @2x/@3x variants
             NSArray *variants = @[
-                iconName,
-                [iconName stringByAppendingString:@"@2x.png"],
-                [iconName stringByAppendingString:@"@3x.png"],
-                [iconName stringByAppendingString:@"@2x~iphone.png"],
-                [iconName stringByAppendingString:@"@3x~iphone.png"],
-                [NSString stringWithFormat:@"%@.png", iconName],
+                    iconName,
+                    [iconName stringByAppendingString:@"@2x.png"],
+                    [iconName stringByAppendingString:@"@3x.png"],
+                    [iconName stringByAppendingString:@"@2x~iphone.png"],
+                    [iconName stringByAppendingString:@"@3x~iphone.png"],
+                    [NSString stringWithFormat:@"%@.png", iconName],
             ];
             for (NSString *v in variants) {
                 NSString *full = [bundlePath stringByAppendingPathComponent:v];
@@ -325,19 +325,19 @@ static id hook_allApplications(id self, SEL _cmd) {
     NSMutableArray *apps = [NSMutableArray array];
     NSFileManager *fm = [NSFileManager defaultManager];
     void (^scanDir)(NSString *) = ^(NSString *dir) {
-        for (NSString *uuid in [fm contentsOfDirectoryAtPath:dir error:nil]) {
-            NSString *uuidPath = [dir stringByAppendingPathComponent:uuid];
-            for (NSString *item in [fm contentsOfDirectoryAtPath:uuidPath error:nil]) {
-                if (![item hasSuffix:@".app"]) continue;
-                NSString *plist = [[uuidPath stringByAppendingPathComponent:item] stringByAppendingPathComponent:@"Info.plist"];
-                NSDictionary *info = [NSDictionary dictionaryWithContentsOfFile:plist];
-                NSString *bid = info[@"CFBundleIdentifier"];
-                if (bid) {
-                    id proxy = [NSClassFromString(@"LSApplicationProxy") applicationProxyForIdentifier:bid];
-                    if (proxy) [apps addObject:proxy];
+            for (NSString *uuid in [fm contentsOfDirectoryAtPath:dir error:nil]) {
+                NSString *uuidPath = [dir stringByAppendingPathComponent:uuid];
+                for (NSString *item in [fm contentsOfDirectoryAtPath:uuidPath error:nil]) {
+                    if (![item hasSuffix:@".app"]) continue;
+                    NSString *plist = [[uuidPath stringByAppendingPathComponent:item] stringByAppendingPathComponent:@"Info.plist"];
+                    NSDictionary *info = [NSDictionary dictionaryWithContentsOfFile:plist];
+                    NSString *bid = info[@"CFBundleIdentifier"];
+                    if (bid) {
+                        id proxy = [NSClassFromString(@"LSApplicationProxy") applicationProxyForIdentifier:bid];
+                        if (proxy) [apps addObject:proxy];
+                    }
                 }
             }
-        }
     };
     scanDir(@"/var/containers/Bundle/Application");
     // System apps (flat structure)
@@ -418,7 +418,7 @@ static void hook_setAppProxy(id self, SEL _cmd, id proxy) {
         ver = [proxy bundleVersion];
         if (!ver && bundlePath) {
             NSDictionary *info = [NSDictionary dictionaryWithContentsOfFile:
-                [bundlePath stringByAppendingPathComponent:@"Info.plist"]];
+                    [bundlePath stringByAppendingPathComponent:@"Info.plist"]];
             ver = info[@"CFBundleShortVersionString"];
             if (!ver) ver = info[@"CFBundleVersion"];
         }
@@ -474,8 +474,8 @@ static void hook_activationViewDidLoad(id self, SEL _cmd) {
     // Call original to set up the VC, then immediately dismiss
     ((void(*)(id,SEL))orig_activationViewDidLoad)(self, _cmd);
     dispatch_async(dispatch_get_main_queue(), ^{
-        ((void(*)(id,SEL,BOOL,id))objc_msgSend)(self,
-            NSSelectorFromString(@"dismissViewControllerAnimated:completion:"), NO, nil);
+            ((void(*)(id,SEL,BOOL,id))objc_msgSend)(self,
+                                                    NSSelectorFromString(@"dismissViewControllerAnimated:completion:"), NO, nil);
     });
     NSLog(@"[Tweak] Suppressed activation nag");
 }
@@ -497,7 +497,7 @@ static NSString *app_root_for_path(NSString *path) {
     for (NSUInteger i = 0; i < comps.count; i++) {
         if ([comps[i] hasSuffix:@".app"]) {
             return [NSString pathWithComponents:
-                [comps subarrayWithRange:NSMakeRange(0, i + 1)]];
+                    [comps subarrayWithRange:NSMakeRange(0, i + 1)]];
         }
     }
     return nil;
@@ -513,8 +513,8 @@ static void ensure_app_chowned_async(NSString *path) {
     }
 
     dispatch_async(g_chown_queue, ^{
-        NSLog(@"[Tweak] auto-chown: %@", appRoot);
-        apfs_own_tree([appRoot UTF8String], 501, 501);
+            NSLog(@"[Tweak] auto-chown: %@", appRoot);
+            apfs_own_tree([appRoot UTF8String], 501, 501);
     });
 }
 
@@ -524,6 +524,15 @@ static id hook_contentsOfDirectory(id self, SEL _cmd, id path, NSError **error) 
         ensure_app_chowned_async((NSString *)path);
     }
     return ((id(*)(id,SEL,id,NSError**))orig_contentsOfDirectory)(self, _cmd, path, error);
+}
+
+// Final execution status
+static int sbx_init_flag = 0;
+
+// Used to obtain the final execution status externally.
+__attribute__((visibility("default"))) int sbx_get_flag()
+{
+    return sbx_init_flag;
 }
 
 #pragma mark - Hook Installation
@@ -574,7 +583,7 @@ static void installHooks(void) {
         if (m) {
             orig_showAlert = method_getImplementation(m);
             class_replaceMethod(alertMeta, NSSelectorFromString(@"showAlertWithTitle:text:cancelButton:otherButtons:completion:"),
-                (IMP)hook_showAlertWithTitle, "@@:@@@@@");
+                                (IMP)hook_showAlertWithTitle, "@@:@@@@@");
         }
     }
     Class activationVC = NSClassFromString(@"NewActivationViewController");
@@ -614,6 +623,7 @@ static void runExploit(void) {
     int kret = kexploit_opa334();
     if (kret != 0) {
         NSLog(@"[Tweak] kexploit failed: %d", kret);
+        sbx_init_flag = -1;
         return;
     }
 
@@ -621,6 +631,7 @@ static void runExploit(void) {
     uint64_t self_proc_addr = proc_self();
     int sret = sandbox_escape(self_proc_addr);
     NSLog(@"[Tweak] sandbox_escape returned %d", sret);
+    sbx_init_flag = (0 == sret) ? 1 : -1;
 
     // For root-owned paths that fail DAC, use apfs_own(path, 501, 501) to
     // flip on-disk ownership to mobile before opening. Example:
@@ -641,15 +652,16 @@ __attribute__((constructor)) void TweakInit(void) {
     if (fd >= 0) {
         close(fd); unlink("/var/mobile/.sbx_check");
         NSLog(@"[Tweak] Sandbox already escaped");
+        sbx_init_flag = 1;
         return;
     }
 
     // Run exploit AFTER app finishes launching (UIKit must be ready for offsets_init
     // which uses UIDevice.currentDevice.systemVersion)
     [[NSNotificationCenter defaultCenter] addObserverForName:UIApplicationDidFinishLaunchingNotification
-        object:nil queue:nil usingBlock:^(NSNotification *note) {
-        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-            runExploit();
-        });
-    }];
+                                                      object:nil queue:nil usingBlock:^(NSNotification *note) {
+                    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+                            runExploit();
+                    });
+            }];
 }
