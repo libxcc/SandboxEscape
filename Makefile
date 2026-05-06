@@ -33,11 +33,12 @@ SandboxEscape_CCFLAGS = $(SandboxEscape_CFLAGS)
 SandboxEscape_OBJCFLAGS = $(SandboxEscape_CFLAGS)
 SandboxEscape_OBJCCFLAGS = $(SandboxEscape_CFLAGS)
 
-SandboxEscape_LDFLAGS += -Wl,-install_name,@rpath/SandboxEscape.dylib
-
 SandboxEscape_FRAMEWORKS = UIKit Foundation IOKit CoreFoundation
 SandboxEscape_PRIVATE_FRAMEWORKS = IOSurface
 SandboxEscape_LIBRARIES = z sandbox
+
+# 安装路径
+SandboxEscape_INSTALL_PATH = @rpath
 
 # SandboxEscape_INSTALL_TARGET_PROCESSES = Filza
 
