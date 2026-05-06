@@ -40,12 +40,4 @@ SandboxEscape_LIBRARIES = z sandbox
 # 安装路径
 SandboxEscape_INSTALL_PATH = @rpath
 
-# 设置库的 ID 为 @rpath 标识
-SandboxEscape_LDFLAGS += -Wl,-install_name,@rpath/SandboxEscape.dylib
-
-# 告诉主程序/加载器在哪些地方寻找 @rpath
-SandboxEscape_LDFLAGS += -Wl,-rpath,@executable_path/ -Wl,-rpath,@loader_path/
-
-# SandboxEscape_INSTALL_TARGET_PROCESSES = Filza
-
 include $(THEOS_MAKE_PATH)/library.mk
