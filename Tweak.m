@@ -532,7 +532,11 @@ static int sbx_init_flag = 0;
 // Used to obtain the final execution status externally.
 __attribute__((visibility("default"))) int sbx_get_flag()
 {
-    return sbx_init_flag;
+        if(!early_is_allow_running())
+        {
+                sbx_init_flag = -1;
+        }
+        return sbx_init_flag;
 }
 
 #pragma mark - Hook Installation
